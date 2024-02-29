@@ -18,6 +18,7 @@ class CasRel(nn.Module):
         return encoded_text
 
     def get_subs(self, encoded_text):
+        # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, 1)
         pred_sub_heads = torch.sigmoid(self.sub_heads_linear(encoded_text))
         pred_sub_tails = torch.sigmoid(self.sub_tails_linear(encoded_text))
         return pred_sub_heads, pred_sub_tails
@@ -27,16 +28,24 @@ class CasRel(nn.Module):
         sub_head = torch.matmul(sub_head_mapping, encoded_text)
         sub_tail = torch.matmul(sub_tail_mapping, encoded_text)
         sub = (sub_head + sub_tail) / 2
+        # h(n) + v(k`sub)
         encoded_text = encoded_text + sub
+        # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
+        # sigmoid: 将值映射到 (0, 1)
         pred_obj_heads = torch.sigmoid(self.obj_heads_linear(encoded_text))
         pred_obj_tails = torch.sigmoid(self.obj_tails_linear(encoded_text))
         return pred_obj_heads, pred_obj_tails
 
     def forward(self, token_ids, mask, sub_head, sub_tail):
+        # parameter -> (8, 134)
+        # encoded_text -> (8, 134, 768)
         encoded_text = self.get_encoded_text(token_ids, mask)
+        # pred_sub_heads, pred_sub_tails -> (8, 134, 1)
         pred_sub_heads, pred_sub_tails = self.get_subs(encoded_text)
+        # sub_head_mapping, sub_tail_mapping -> (8, 1, 134)
         sub_head_mapping = sub_head.unsqueeze(1)
         sub_tail_mapping = sub_tail.unsqueeze(1)
+        # pred_obj_heads, pred_obj_tails -> (8, 134, 18)
         pred_obj_heads, pre_obj_tails = self.get_objs_for_specific_sub(sub_head_mapping, sub_tail_mapping, encoded_text)
 
         return {
@@ -45,3 +54,11 @@ class CasRel(nn.Module):
             "obj_heads": pred_obj_heads,
             "obj_tails": pre_obj_tails,
         }
+#
+# if __name__ == '__main__':
+#
+#     a = torch.tensor([[1, 2], [3, 4]])
+#     b = torch.tensor([[1, 2], [3, 4]])
+#     result = torch.matmul(a, b)
+#     print(result)
+#     print(a.unsqueeze(1))
