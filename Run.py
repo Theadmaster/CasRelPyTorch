@@ -15,7 +15,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser(description='Model Controller')
 parser.add_argument('--lr', type=float, default=1e-5, help='learning rate')
-parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--max_epoch', type=int, default=10)
 parser.add_argument('--max_len', type=int, default=300)
 parser.add_argument('--dataset', default='baidu', type=str, help='define your own dataset names')
