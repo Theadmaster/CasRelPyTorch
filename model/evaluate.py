@@ -19,6 +19,7 @@ def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.
     orders = ['subject', 'relation', 'object']
     correct_num, predict_num, gold_num = 0, 0, 0
     tokenizer = BertTokenizer.from_pretrained(config.bert_name)
+    results = []  # 用于存储结果
 
     for batch_x, batch_y in tqdm(data_iter):
         with torch.no_grad():
@@ -60,9 +61,7 @@ def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.
                                 triple_list.append((sub, rel, obj))
                                 break
 
-                triple_set = set()
-                for s, r, o in triple_list:
-                    triple_set.add((s, r, o))
+                triple_set = set(triple_list)
                 pred_list = list(triple_set)
 
             else:
@@ -75,11 +74,7 @@ def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.
             gold_num += len(gold_triples)
 
             if output:
-                if not os.path.exists(config.result_dir):
-                    os.mkdir(config.result_dir)
-                path = os.path.join(config.result_dir, config.result_save_name)
-                fw = open(path, 'w')
-                result = json.dumps({
+                result = {
                     'triple_list_gold': [
                         dict(zip(orders, triple)) for triple in gold_triples
                     ],
@@ -92,8 +87,17 @@ def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.
                     'lack': [
                         dict(zip(orders, triple)) for triple in gold_triples - pred_triples
                     ]
-                }, ensure_ascii=False)
-                fw.write(result + '\n')
+                }
+                results.append(result)
+
+    # 写入结果文件
+    if output:
+        if not os.path.exists(config.result_dir):
+            os.mkdir(config.result_dir)
+        path = os.path.join(config.result_dir, config.result_save_name)
+        with open(path, 'w', encoding='utf-8') as fw:
+            for result in results:
+                fw.write(json.dumps(result, ensure_ascii=False) + '\n')
 
     print("correct_num: {:3d}, predict_num: {:3d}, gold_num: {:3d}".format(correct_num, predict_num, gold_num))
     precision = correct_num / (predict_num + 1e-10)
