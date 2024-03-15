@@ -14,7 +14,7 @@ def to_tuple(triple_list):
     return ret
 
 
-def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.5):
+def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.1, t_bar=0.1):
 
     orders = ['subject', 'relation', 'object']
     correct_num, predict_num, gold_num = 0, 0, 0
