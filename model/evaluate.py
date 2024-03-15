@@ -14,7 +14,7 @@ def to_tuple(triple_list):
     return ret
 
 
-def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.1, t_bar=0.1):
+def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.5):
 
     orders = ['subject', 'relation', 'object']
     correct_num, predict_num, gold_num = 0, 0, 0
@@ -28,6 +28,7 @@ def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.1, t_bar=0.
             pred_sub_heads, pred_sub_tails = model.get_subs(encoded_text)
             sub_heads = torch.where(pred_sub_heads[0] > h_bar)[0]
             sub_tails = torch.where(pred_sub_tails[0] > t_bar)[0]
+
             subjects = []
             for sub_head in sub_heads:
                 sub_tail = sub_tails[sub_tails >= sub_head]
