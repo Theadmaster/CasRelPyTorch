@@ -5,7 +5,7 @@ import os
 
 # 构建数据文件路径
 data_folder = os.path.join('..', 'data', 'coronary_angiography')
-jsonl_file = os.path.join(data_folder, 'raw1.jsonl')
+jsonl_file = os.path.join(data_folder, 'raw2.jsonl')
 
 # 读取 JSONL 文件
 data = []
@@ -13,16 +13,20 @@ data = []
 with open(jsonl_file, 'r', encoding='utf-8') as file:
     for line in file:
         item = json.loads(line.strip())
-        if len(item["text"]) < 751:
+        if len(item["text"]) < 500:
             data.append(item)
 
 # 洗牌数据
 random.shuffle(data)
 
 # 选择需要的数量的数据
-train_data = data[:382]
-dev_data = data[382:430]
-test_data = data[430:478]
+# train_data = data[:382]
+# dev_data = data[382:430]
+# test_data = data[430:478]
+
+train_data = data[:320]
+dev_data = data[320:360]
+test_data = data[360:402]
 
 # 处理数据并存入文件
 def save_data(filename, data):
@@ -129,7 +133,7 @@ def save_len_less_than_751_raw():
     text_len_max = []
     # 定义输入和输出文件路径
     input_file = os.path.join('..', 'data', 'coronary_angiography', 'raw.jsonl')
-    output_file = os.path.join('..', 'data', 'coronary_angiography', 'raw1.jsonl')
+    output_file = os.path.join('..', 'data', 'coronary_angiography', 'raw2.jsonl')
 
     # 创建一个空列表用于存储符合条件的数据
     filtered_data = []
@@ -141,7 +145,7 @@ def save_len_less_than_751_raw():
             text = data['text']
 
             # 如果text长度小于751，则将该条数据添加到列表中
-            if len(text) < 751:
+            if len(text) < 500:
                 filtered_data.append(data)
 
     # 将筛选后的数据写入到输出文件中
