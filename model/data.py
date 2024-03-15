@@ -9,8 +9,8 @@ from collections import defaultdict
 from torch.nn.utils.rnn import pad_sequence
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-num_rel = 18
-
+# num_rel = 18
+num_rel = 8
 
 def load_data(train_path, dev_path, test_path, rel_dict_path):
     paths = {'train': train_path, 'dev': dev_path, 'test': test_path}
@@ -37,7 +37,8 @@ class MyDataset(DataSet):
         self.dataset = dataset
         self.rel_vocab = rel_vocab
         self.is_test = is_test
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        # self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        self.tokenizer = BertTokenizer.from_pretrained('nghuyong/ernie-3.0-base-zh')
 
     def __getitem__(self, item):
         json_data = self.dataset[item]
