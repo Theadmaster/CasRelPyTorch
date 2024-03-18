@@ -5,7 +5,7 @@ import os
 
 # 构建数据文件路径
 data_folder = os.path.join('..', 'data', 'coronary_angiography')
-jsonl_file = os.path.join(data_folder, 'raw1.jsonl')
+jsonl_file = os.path.join(data_folder, 'raw_segment.jsonl')
 
 # 读取 JSONL 文件
 data = []
@@ -13,16 +13,15 @@ data = []
 with open(jsonl_file, 'r', encoding='utf-8') as file:
     for line in file:
         item = json.loads(line.strip())
-        if len(item["text"]) < 751:
-            data.append(item)
+        data.append(item)
 
 # 洗牌数据
 random.shuffle(data)
 
 # 选择需要的数量的数据
-train_data = data[:382]
-dev_data = data[382:430]
-test_data = data[430:478]
+train_data = data[:3200]
+dev_data = data[3200:3900]
+test_data = data[3900:4596]
 
 # train_data = data[:320]
 # dev_data = data[320:360]

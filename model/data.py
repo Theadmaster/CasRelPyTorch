@@ -37,8 +37,8 @@ class MyDataset(DataSet):
         self.dataset = dataset
         self.rel_vocab = rel_vocab
         self.is_test = is_test
-        # self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-        self.tokenizer = BertTokenizer.from_pretrained('nghuyong/ernie-3.0-base-zh')
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        # self.tokenizer = BertTokenizer.from_pretrained('nghuyong/ernie-3.0-base-zh')
     #
     def __getitem__(self, item):
         json_data = self.dataset[item]
