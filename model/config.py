@@ -29,6 +29,6 @@ class Config(object):
         self.result_save_name = 'result.json'
 
         # 对比学习超参数
-        self.margin = 0.2
-        self.re_weight = 0.7
-        self.span_weight = 0.3
+        self.margin = args.margin
+        self.re_weight = args.re_weight
+        self.span_weight = args.span_weight
