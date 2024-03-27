@@ -52,4 +52,5 @@ class Config(object):
         # 词语丢弃（Word Dropout）: WD
         # 字符丢弃（Character Dropout）: CD
         # 随机噪声注入（Random Noise Injection）: RNI
-        self.aug_pipeline = args.pipeline.split(",")
+        self.aug_pipeline = args.aug_pipeline
+
