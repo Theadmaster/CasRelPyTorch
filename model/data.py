@@ -36,7 +36,7 @@ def find_head_idx(source, target):
     return -1
 
 # 负例：改变随机数量和随机位置的 object实体 ，改变目标为不同类型的实体
-def get_augmented_data(origin, spo_list, type, entity_dict):
+def get_augmented_data(origin, spo_list, type, entity_dict, aug_pipeline):
     if type == 'positive':
         entities_pos = []
         for spo in spo_list:
@@ -53,6 +53,9 @@ def get_augmented_data(origin, spo_list, type, entity_dict):
             offset += pos[1]-pos[0] - 1
         index1, index2 = random.sample(range(len(origin_list)), 2)
         origin_list[index1], origin_list[index2] = origin_list[index2], origin_list[index1]
+        if 'RD' in aug_pipeline:
+            index_to_remove = random.randint(0, len(origin_list) - 1)
+            origin_list.pop(index_to_remove)
         origin_list = ''.join(origin_list)
         return origin_list
     elif type == 'negative':
@@ -100,7 +103,7 @@ class MyDataset(DataSet):
         text_len = len(tokens)
 
         # 正样本
-        text_positive = get_augmented_data(json_data['text'], json_data['spo_list'], 'positive', self.entity_dict)
+        text_positive = get_augmented_data(json_data['text'], json_data['spo_list'], 'positive', self.entity_dict, self.config.aug_pipeline)
         tokenized_positive = self.tokenizer(text_positive, max_length=self.config.max_len, truncation=True)
         tokens_positive = tokenized_positive['input_ids']
         masks_positive = tokenized_positive['attention_mask']

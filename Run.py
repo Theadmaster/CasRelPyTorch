@@ -36,7 +36,7 @@ parser.add_argument('--margin', default=0.2, type=float)
 parser.add_argument('--re_weight', default=0.5, type=float)
 parser.add_argument('--span_weight', default=0.5, type=float)
 parser.add_argument('--cl', default=True, type=bool)
-parser.add_argument('--aug_pipeline', default='RS', type=str)
+parser.add_argument('--aug_pipeline', default='RS,RD', type=str)
 args = parser.parse_args()
 con = Config(args)
 
