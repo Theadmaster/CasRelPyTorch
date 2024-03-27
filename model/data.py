@@ -110,7 +110,7 @@ class MyDataset(DataSet):
         token_ids_positive = torch.tensor(tokens_positive, dtype=torch.long)
         masks_positive = torch.tensor(masks_positive, dtype=torch.bool)
         # 负样本
-        text_negative = get_augmented_data(json_data['text'], json_data['spo_list'], 'negative', self.entity_dict)
+        text_negative = get_augmented_data(json_data['text'], json_data['spo_list'], 'negative', self.entity_dict, self.config.aug_pipeline)
         tokenized_negative = self.tokenizer(text_negative, max_length=self.config.max_len, truncation=True)
         tokens_negative = tokenized_negative['input_ids']
         masks_negative = tokenized_negative['attention_mask']
