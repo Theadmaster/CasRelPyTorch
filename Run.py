@@ -37,7 +37,6 @@ con = Config(args)
 
 # 读取json
 def init_entities_dict():
-    print('当前文件目录：',os.getcwd())
     data_folder = os.path.join('data', 'coronary_angiography')
     jsonl_file = os.path.join(data_folder, 'entities_set.json')
     with open(jsonl_file, "r") as json_file:
