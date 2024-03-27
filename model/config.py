@@ -32,3 +32,24 @@ class Config(object):
         self.margin = args.margin
         self.re_weight = args.re_weight
         self.span_weight = args.span_weight
+
+        # 是否开启对比loss
+        self.cl = args.cl
+
+        # 数据增强pipeline,增强策略用","隔开
+        # 同义词替换（Synonym Replacement）: SR
+        # 随机插入（Random Insertion）: RI
+        # 随机交换（Random Swap）: RS
+        # 随机删除（Random Deletion）: RD
+        # 回译（Back Translation）: BT
+        # 文本旋转（Text Rotation）: TR
+        # 文本遮罩（Text Masking）: TM
+        # 文本变形（Text Morphing）: TMo
+        # 句子分割（Sentence Splitting）: SS
+        # 随机重排（Random Shuffling）: RSh
+        # 文本连接（Text Concatenation）: TC
+        # 随机扰动（Random Perturbation）: RP
+        # 词语丢弃（Word Dropout）: WD
+        # 字符丢弃（Character Dropout）: CD
+        # 随机噪声注入（Random Noise Injection）: RNI
+        self.aug_pipeline = args.pipeline.split(",")

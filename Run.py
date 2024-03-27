@@ -35,6 +35,8 @@ parser.add_argument('--bert_dim', default=768, type=int)
 parser.add_argument('--margin', default=0.2, type=float)
 parser.add_argument('--re_weight', default=0.5, type=float)
 parser.add_argument('--span_weight', default=0.5, type=float)
+parser.add_argument('--cl', default=True, type=bool)
+parser.add_argument('--aug_pipeline', default='RS', type=str)
 args = parser.parse_args()
 con = Config(args)
 
@@ -72,9 +74,12 @@ class MyLoss(LossBase):
                   loss_fn(predict['sub_tails'], target['sub_tails'], mask) + \
                   loss_fn(predict['obj_heads'], target['obj_heads'], mask) + \
                   loss_fn(predict['obj_tails'], target['obj_tails'], mask)
-        re_loss = re_loss * con.re_weight
-        span_loss = contrastive_loss(predict['anchor'], predict['positive'], predict['negative']) * con.span_weight
-        return re_loss + span_loss
+        span_loss = contrastive_loss(predict['anchor'], predict['positive'], predict['negative'])
+
+        if con.cl:
+            return re_loss * con.re_weight + span_loss * con.span_weight
+        else:
+            return re_loss
 
     def __call__(self, pred_dict, target_dict, check=False):
         loss = self.get_loss(pred_dict, target_dict)
