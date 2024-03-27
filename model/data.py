@@ -37,16 +37,24 @@ def find_head_idx(source, target):
 
 # 负例：改变随机数量和随机位置的 object实体 ，改变目标为不同类型的实体
 def get_augmented_data(origin, spo_list, type, entity_dict):
-
-    # 正例还没写完
     if type == 'positive':
         entities_pos = []
         for spo in spo_list:
             start_o = origin.find(spo['object'])
-            entities_pos.append([start_o, start_o+len(spo['object'])])
+            entities_pos.append((start_o, start_o+len(spo['object'])))
             start_s = origin.find(spo['subject'])
-            entities_pos.append([start_s, start_s + len(spo['subject'])])
-        return origin
+            entities_pos.append((start_s, start_s + len(spo['subject'])))
+        entities_pos = sorted(set(entities_pos), key=lambda ele: ele[0])
+        origin_list = list(origin)
+        offset = 0
+        for pos in entities_pos:
+            merged = ''.join(origin_list[pos[0]-offset:pos[1]-offset])
+            origin_list[pos[0]-offset:pos[1]-offset] = [merged]
+            offset += pos[1]-pos[0] - 1
+        index1, index2 = random.sample(range(len(origin_list)), 2)
+        origin_list[index1], origin_list[index2] = origin_list[index2], origin_list[index1]
+        origin_list = ''.join(origin_list)
+        return origin_list
     elif type == 'negative':
         num = random.randint(1, len(spo_list))
         count = 0
@@ -67,14 +75,6 @@ def get_augmented_data(origin, spo_list, type, entity_dict):
                 text = text.replace(object_text, random_object)
             else:
                 text = text.replace(object_text, spo['subject'])
-            # if filtered_dict:
-            #     random_key = random.choice(list(filtered_dict.keys()))
-            #     random_value = random.choice(filtered_dict[random_key])
-            #     text = text.replace(object_text, random_value)
-            # else:
-            #     random_key = random.choice(list(entity_dict.keys()))
-            #     random_value = random.choice(entity_dict[random_key])
-            #     text = text.replace(object_text, random_value)
             count += 1
         return text
     return origin
@@ -99,6 +99,14 @@ class MyDataset(DataSet):
         masks = tokenized['attention_mask']
         text_len = len(tokens)
 
+        # 正样本
+        text_positive = get_augmented_data(json_data['text'], json_data['spo_list'], 'positive', self.entity_dict)
+        tokenized_positive = self.tokenizer(text_positive, max_length=self.config.max_len, truncation=True)
+        tokens_positive = tokenized_positive['input_ids']
+        masks_positive = tokenized_positive['attention_mask']
+        token_ids_positive = torch.tensor(tokens_positive, dtype=torch.long)
+        masks_positive = torch.tensor(masks_positive, dtype=torch.bool)
+        # 负样本
         text_negative = get_augmented_data(json_data['text'], json_data['spo_list'], 'negative', self.entity_dict)
         tokenized_negative = self.tokenizer(text_negative, max_length=self.config.max_len, truncation=True)
         tokens_negative = tokenized_negative['input_ids']
@@ -172,7 +180,7 @@ class MyDataset(DataSet):
 
         # sub_heads: batch中所有样本的主体开始位置, sub_head: batch中随机一条样本的主体开始位置
         #
-        return token_ids, token_ids_negative, masks, masks_negative, sub_heads, sub_tails, sub_head, sub_tail, obj_heads, obj_tails, json_data['spo_list']
+        return token_ids, token_ids_negative, token_ids_positive, masks, masks_negative, masks_positive, sub_heads, sub_tails, sub_head, sub_tail, obj_heads, obj_tails, json_data['spo_list']
 
     def __len__(self):
         return len(self.dataset)
@@ -180,11 +188,13 @@ class MyDataset(DataSet):
 
 def my_collate_fn(batch):
     batch = list(filter(lambda x: x is not None, batch))
-    token_ids, token_ids_negative, masks, masks_negative, sub_heads, sub_tails, sub_head, sub_tail, obj_heads, obj_tails, triples = zip(*batch)
+    token_ids, token_ids_negative, token_ids_positive, masks, masks_negative, masks_positive, sub_heads, sub_tails, sub_head, sub_tail, obj_heads, obj_tails, triples = zip(*batch)
     batch_token_ids = pad_sequence(token_ids, batch_first=True)
     batch_token_ids_negative = pad_sequence(token_ids_negative, batch_first=True)
+    batch_token_ids_positive = pad_sequence(token_ids_positive, batch_first=True)
     batch_masks = pad_sequence(masks, batch_first=True)
     batch_masks_negative = pad_sequence(masks_negative, batch_first=True)
+    batch_masks_positive = pad_sequence(masks_positive, batch_first=True)
     batch_sub_heads = pad_sequence(sub_heads, batch_first=True)
     batch_sub_tails = pad_sequence(sub_tails, batch_first=True)
     batch_sub_head = pad_sequence(sub_head, batch_first=True)
@@ -195,8 +205,10 @@ def my_collate_fn(batch):
 # 上面的对象是x， 下面的是y
     return {"token_ids": batch_token_ids.to(device),
             "token_ids_negative": batch_token_ids_negative.to(device),
+            "token_ids_positive": batch_token_ids_positive.to(device),
             "mask": batch_masks.to(device),
             "mask_negative": batch_masks_negative.to(device),
+            "mask_positive": batch_masks_positive.to(device),
             "sub_head": batch_sub_head.to(device),
             "sub_tail": batch_sub_tail.to(device),
             "sub_heads": batch_sub_heads.to(device),

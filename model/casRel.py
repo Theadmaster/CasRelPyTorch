@@ -14,13 +14,12 @@ class CasRel(nn.Module):
         self.sub_tails_linear = nn.Linear(self.config.bert_dim, 1)
         self.obj_heads_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
         self.obj_tails_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
-        self.projecter_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
 
-    def projecter_cls(self, encoded_text_origin, encoded_text_augmented_negative):
+    def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
+        cls_augmented_positive = encoded_text_augmented_positive[:, 0, :]
         cls_augmented_negative = encoded_text_augmented_negative[:, 0, :]
-        return cls_origin, cls_augmented_negative
-
+        return cls_origin, cls_augmented_positive, cls_augmented_negative
 
     def get_encoded_text(self, token_ids, mask):
         encoded_text = self.bert(token_ids, attention_mask=mask)[0]
@@ -45,14 +44,15 @@ class CasRel(nn.Module):
         pred_obj_tails = torch.sigmoid(self.obj_tails_linear(encoded_text))
         return pred_obj_heads, pred_obj_tails
 
-    def forward(self, token_ids, token_ids_negative, mask, mask_negative, sub_head, sub_tail):
+    def forward(self, token_ids, token_ids_negative, token_ids_positive, mask, mask_negative, mask_positive, sub_head, sub_tail):
+        encoded_text_positive = self.get_encoded_text(token_ids_positive, mask_positive)
         encoded_text_negative = self.get_encoded_text(token_ids_negative, mask_negative)
         # parameter -> (8, 134)
         # encoded_text -> (8, 134, 768)
         encoded_text = self.get_encoded_text(token_ids, mask)
 
         # 映射到同一向量空间
-        cls_origin, cls_augmented_negative = self.projecter_cls(encoded_text, encoded_text_negative)
+        cls_origin, cls_augmented_positive, cls_augmented_negative = self.projecter_cls(encoded_text, encoded_text_positive, encoded_text_negative)
 
         # pred_sub_heads, pred_sub_tails -> (8, 134, 1)
         pred_sub_heads, pred_sub_tails = self.get_subs(encoded_text)
@@ -68,6 +68,7 @@ class CasRel(nn.Module):
             "obj_heads": pred_obj_heads,
             "obj_tails": pre_obj_tails,
             "anchor": cls_origin,
+            "positive": cls_augmented_positive,
             "negative": cls_augmented_negative
         }
 #

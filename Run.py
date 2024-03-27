@@ -54,10 +54,11 @@ class MyLoss(LossBase):
     def get_loss(self, predict, target):
         mask = target['mask']
 
-        def contrastive_loss(anchor, negative, margin=con.margin):
+        def contrastive_loss(anchor, positive, negative, margin=con.margin):
+            pos_similarity = F.cosine_similarity(anchor, positive)
             # 锚点与负例余弦相似度
             neg_similarity = F.cosine_similarity(anchor, negative)
-            loss = F.relu(neg_similarity - margin)
+            loss = F.relu(neg_similarity - pos_similarity + margin)
             return loss.mean()
         def loss_fn(pred, gold, mask):
             pred = pred.squeeze(-1)
@@ -72,7 +73,7 @@ class MyLoss(LossBase):
                   loss_fn(predict['obj_heads'], target['obj_heads'], mask) + \
                   loss_fn(predict['obj_tails'], target['obj_tails'], mask)
         re_loss = re_loss * con.re_weight
-        span_loss = contrastive_loss(predict['anchor'], predict['negative']) * con.span_weight
+        span_loss = contrastive_loss(predict['anchor'], predict['positive'], predict['negative']) * con.span_weight
         return re_loss + span_loss
 
     def __call__(self, pred_dict, target_dict, check=False):
