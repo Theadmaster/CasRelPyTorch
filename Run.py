@@ -1,4 +1,6 @@
 import argparse
+import os
+import json
 import torch
 import torch.optim as optim
 from model.casRel import CasRel
@@ -11,6 +13,15 @@ from fastNLP import Trainer, LossBase
 
 seed = 226
 torch.manual_seed(seed)
+# def seed_everything(seed=226):
+#     os.environ['PYTHONHASHSEED'] = str(seed)
+#
+#     torch.manual_seed(seed)
+#     torch.cuda.manual_seed(seed)
+#     torch.backends.cudnn.deterministic = True
+#
+# seed_everything()
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser(description='Model Controller')
@@ -24,6 +35,15 @@ parser.add_argument('--bert_dim', default=768, type=int)
 args = parser.parse_args()
 con = Config(args)
 
+# 读取json
+def init_entities_dict():
+    print('当前文件目录：',os.getcwd())
+    data_folder = os.path.join('data', 'coronary_angiography')
+    jsonl_file = os.path.join(data_folder, 'entities_set.json')
+    with open(jsonl_file, "r") as json_file:
+        entity_dict = json.load(json_file)
+    return entity_dict
+entity_dict = init_entities_dict()
 
 class MyLoss(LossBase):
     def __init__(self):
@@ -32,6 +52,11 @@ class MyLoss(LossBase):
     def get_loss(self, predict, target):
         mask = target['mask']
 
+        def contrastive_loss(anchor, negative, margin=con.margin):
+            # 锚点与负例余弦相似度
+            neg_similarity = F.cosine_similarity(anchor, negative)
+            loss = F.relu(neg_similarity - margin)
+            return loss.mean()
         def loss_fn(pred, gold, mask):
             pred = pred.squeeze(-1)
             loss = F.binary_cross_entropy(pred, gold, reduction='none')
@@ -40,10 +65,13 @@ class MyLoss(LossBase):
             loss = torch.sum(loss * mask) / torch.sum(mask)
             return loss
 
-        return loss_fn(predict['sub_heads'], target['sub_heads'], mask) + \
-               loss_fn(predict['sub_tails'], target['sub_tails'], mask) + \
-               loss_fn(predict['obj_heads'], target['obj_heads'], mask) + \
-               loss_fn(predict['obj_tails'], target['obj_tails'], mask)
+        re_loss = loss_fn(predict['sub_heads'], target['sub_heads'], mask) + \
+                  loss_fn(predict['sub_tails'], target['sub_tails'], mask) + \
+                  loss_fn(predict['obj_heads'], target['obj_heads'], mask) + \
+                  loss_fn(predict['obj_tails'], target['obj_tails'], mask)
+        re_loss = re_loss * con.re_weight
+        span_loss = contrastive_loss(predict['anchor'], predict['negative']) * con.span_weight
+        return re_loss + span_loss
 
     def __call__(self, pred_dict, target_dict, check=False):
         loss = self.get_loss(pred_dict, target_dict)
@@ -53,7 +81,7 @@ class MyLoss(LossBase):
 if __name__ == '__main__':
     model = CasRel(con).to(device)
     data_bundle, rel_vocab = load_data(con.train_path, con.dev_path, con.test_path, con.rel_path)
-    train_data = get_data_iterator(con, data_bundle.get_dataset('train'), rel_vocab)
+    train_data = get_data_iterator(con, data_bundle.get_dataset('train'), rel_vocab, entity_dict=entity_dict)
     dev_data = get_data_iterator(con, data_bundle.get_dataset('dev'), rel_vocab, is_test=True)
     test_data = get_data_iterator(con, data_bundle.get_dataset('test'), rel_vocab, is_test=True)
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=con.lr)

@@ -27,3 +27,8 @@ class Config(object):
         self.weights_save_name = 'model.pt'
         self.log_save_name = 'model.out'
         self.result_save_name = 'result.json'
+
+        # 对比学习超参数
+        self.margin = 0.2
+        self.re_weight = 0.7
+        self.span_weight = 0.3
