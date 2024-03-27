@@ -57,15 +57,24 @@ def get_augmented_data(origin, spo_list, type, entity_dict):
                 break
             object_type = spo['object_type']
             object_text = spo['object']
-            filtered_dict = {key: value for key, value in entity_dict.items() if key != object_type}
-            if filtered_dict:
-                random_key = random.choice(list(filtered_dict.keys()))
-                random_value = random.choice(filtered_dict[random_key])
-                text = text.replace(object_text, random_value)
+            # filtered_dict = {key: value for key, value in entity_dict.items() if key != object_type}
+            filtered_list = []
+            for key, value_list in entity_dict.items():
+                if key != object_type:
+                    filtered_list.extend(value_list)
+            if filtered_list:
+                random_object = random.choice(filtered_list)
+                text = text.replace(object_text, random_object)
             else:
-                random_key = random.choice(list(entity_dict.keys()))
-                random_value = random.choice(entity_dict[random_key])
-                text = text.replace(object_text, random_value)
+                text = text.replace(object_text, spo['subject'])
+            # if filtered_dict:
+            #     random_key = random.choice(list(filtered_dict.keys()))
+            #     random_value = random.choice(filtered_dict[random_key])
+            #     text = text.replace(object_text, random_value)
+            # else:
+            #     random_key = random.choice(list(entity_dict.keys()))
+            #     random_value = random.choice(entity_dict[random_key])
+            #     text = text.replace(object_text, random_value)
             count += 1
         return text
     return origin
