@@ -77,7 +77,7 @@ class MyLoss(LossBase):
         span_loss = contrastive_loss(predict['anchor'], predict['positive'], predict['negative'])
 
         if con.cl:
-            return re_loss * con.re_weight + torch.log(1 + span_loss) * con.span_weight
+            return re_loss * con.re_weight + torch.log(1 + span_loss * con.span_weight)
         else:
             return re_loss
 
