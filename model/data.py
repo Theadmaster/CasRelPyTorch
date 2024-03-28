@@ -51,8 +51,9 @@ def get_augmented_data(origin, spo_list, type, entity_dict, aug_pipeline):
             merged = ''.join(origin_list[pos[0]-offset:pos[1]-offset])
             origin_list[pos[0]-offset:pos[1]-offset] = [merged]
             offset += pos[1]-pos[0] - 1
-        index1, index2 = random.sample(range(len(origin_list)), 2)
-        origin_list[index1], origin_list[index2] = origin_list[index2], origin_list[index1]
+        if 'RS' in aug_pipeline:
+            index1, index2 = random.sample(range(len(origin_list)), 2)
+            origin_list[index1], origin_list[index2] = origin_list[index2], origin_list[index1]
         if 'RD' in aug_pipeline:
             index_to_remove = random.randint(0, len(origin_list) - 1)
             origin_list.pop(index_to_remove)
