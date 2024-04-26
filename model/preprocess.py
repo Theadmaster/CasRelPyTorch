@@ -28,7 +28,7 @@ test_data = data[3900:4596]
 # test_data = data[360:402]
 
 # 处理数据并存入文件
-def save_data(filename, data):
+def save_data(filename, data, data_folder=data_folder):
     with open(os.path.join(data_folder, filename), 'w', encoding='utf-8') as file:
         for item in data:
             processed_item = preprocess_data_item(item)
@@ -154,6 +154,7 @@ def save_len_less_than_751_raw():
 
 if __name__ == '__main__':
     # save_len_less_than_751_raw()
-    save_data('train.json', train_data)
+    path_1 = os.path.join('..', 'data', 'coronary_angiography', 'rel_1')
+    save_data('train.json', train_data,)
     save_data('dev.json', dev_data)
     save_data('test.json', test_data)

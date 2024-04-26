@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from transformers import BertModel
-
+from module.norm import CrossNorm
 
 
 
@@ -54,13 +54,19 @@ class CasRel(nn.Module):
         # 映射到同一向量空间
         cls_origin, cls_augmented_positive, cls_augmented_negative = self.projecter_cls(encoded_text, encoded_text_positive, encoded_text_negative)
 
+        # 这里增加norm模块
+        block = CrossNorm()
+        output_norm = block(encoded_text)
+
         # pred_sub_heads, pred_sub_tails -> (8, 134, 1)
-        pred_sub_heads, pred_sub_tails = self.get_subs(encoded_text)
+        # pred_sub_heads, pred_sub_tails = self.get_subs(encoded_text)
+        pred_sub_heads, pred_sub_tails = self.get_subs(output_norm)
         # sub_head_mapping, sub_tail_mapping -> (8, 1, 134)
         sub_head_mapping = sub_head.unsqueeze(1)
         sub_tail_mapping = sub_tail.unsqueeze(1)
         # pred_obj_heads, pred_obj_tails -> (8, 134, 18)
-        pred_obj_heads, pre_obj_tails = self.get_objs_for_specific_sub(sub_head_mapping, sub_tail_mapping, encoded_text)
+        # pred_obj_heads, pre_obj_tails = self.get_objs_for_specific_sub(sub_head_mapping, sub_tail_mapping, encoded_text)
+        pred_obj_heads, pre_obj_tails = self.get_objs_for_specific_sub(sub_head_mapping, sub_tail_mapping, output_norm)
 
         return {
             "sub_heads": pred_sub_heads,
