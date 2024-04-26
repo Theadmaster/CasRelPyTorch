@@ -5,7 +5,7 @@ import os
 
 # 构建数据文件路径
 data_folder = os.path.join('..', 'data', 'coronary_angiography')
-jsonl_file = os.path.join(data_folder, 'raw_segment.jsonl')
+jsonl_file = os.path.join(data_folder, 'raw_segment_set.jsonl')
 
 # 读取 JSONL 文件
 data = []
@@ -19,9 +19,13 @@ with open(jsonl_file, 'r', encoding='utf-8') as file:
 random.shuffle(data)
 
 # 选择需要的数量的数据
-train_data = data[:3200]
-dev_data = data[3200:3900]
-test_data = data[3900:4596]
+train_data = data[:1200]
+dev_data = data[1200:1460]
+test_data = data[1460:1729]
+
+# train_data = data[:3200]
+# dev_data = data[3200:3900]
+# test_data = data[3900:4596]
 
 # train_data = data[:320]
 # dev_data = data[320:360]
@@ -154,7 +158,6 @@ def save_len_less_than_751_raw():
 
 if __name__ == '__main__':
     # save_len_less_than_751_raw()
-    path_1 = os.path.join('..', 'data', 'coronary_angiography', 'rel_1')
-    save_data('train.json', train_data,)
+    save_data('train.json', train_data)
     save_data('dev.json', dev_data)
     save_data('test.json', test_data)
