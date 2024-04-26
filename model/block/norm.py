@@ -98,7 +98,7 @@ def cn_op_2ins_space_chan(x, crop='neither', beta=1, bbx_thres=0.1, lam=None, ch
 
 
 class CrossNorm(nn.Module):
-    """CrossNorm module"""
+    """CrossNorm block"""
     def __init__(self, crop=None, beta=None):
         super(CrossNorm, self).__init__()
 
@@ -117,7 +117,7 @@ class CrossNorm(nn.Module):
 
 
 class SelfNorm(nn.Module):
-    """SelfNorm module"""
+    """SelfNorm block"""
     def __init__(self, chan_num, is_two=False):
         super(SelfNorm, self).__init__()
 
@@ -156,7 +156,7 @@ class SelfNorm(nn.Module):
             return x * g_y.expand_as(x)
 
 class CNSN(nn.Module):
-    """A module to combine CrossNorm and SelfNorm"""
+    """A block to combine CrossNorm and SelfNorm"""
     def __init__(self, crossnorm, selfnorm):
         super(CNSN, self).__init__()
         self.crossnorm = crossnorm

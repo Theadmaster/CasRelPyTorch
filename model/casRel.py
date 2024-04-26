@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from transformers import BertModel
-from module.norm import CrossNorm
+from block.norm import CrossNorm
 
 
 
