@@ -200,13 +200,13 @@ class CasRel(nn.Module):
 
         # 归一化放这 ****** new ******
         # 这里增加norm模块
-        block = CrossNorm()
-        output_norm = block(encoded_text)
+        # block = CrossNorm()
+        # encoded_text = block(encoded_text)
 
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
         # sigmoid: 将值映射到 (0, 1)
-        pred_obj_heads = torch.sigmoid(self.obj_heads_linear(output_norm))
-        pred_obj_tails = torch.sigmoid(self.obj_tails_linear(output_norm))
+        pred_obj_heads = torch.sigmoid(self.obj_heads_linear(encoded_text))
+        pred_obj_tails = torch.sigmoid(self.obj_tails_linear(encoded_text))
         return pred_obj_heads, pred_obj_tails
 
     def forward(self, token_ids, token_ids_negative, token_ids_positive, mask, mask_negative, mask_positive, sub_head, sub_tail):
