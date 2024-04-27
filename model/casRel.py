@@ -164,6 +164,46 @@ class CNSN(nn.Module):
             x = self.selfnorm(x)
         return x
 
+
+# tApe
+class tAPE(nn.Module):
+    r"""Inject some information about the relative or absolute position of the tokens
+        in the sequence. The positional encodings have the same dimension as
+        the embeddings, so that the two can be summed. Here, we use sine and cosine
+        functions of different frequencies.
+    .. math::
+        \text{PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model))
+        \text{PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))
+        \text{where pos is the word position and i is the embed idx)
+    Args:
+        d_model: the embed dim (required).
+        dropout: the dropout value (default=0.1).
+        max_len: the max. length of the incoming sequence (default=1024).
+    """
+
+    def __init__(self, d_model, dropout=0.1, max_len=32, scale_factor=1.0):
+        super(tAPE, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
+        pe = torch.zeros(max_len, d_model)  # positional encoding
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+
+        pe[:, 0::2] = torch.sin((position * div_term)*(d_model/max_len))
+        pe[:, 1::2] = torch.cos((position * div_term)*(d_model/max_len))
+        pe = scale_factor * pe.unsqueeze(0)
+        self.register_buffer('pe', pe)  # this stores the variable in the state_dict (used for non-trainable variables)
+
+    def forward(self, x):
+        r"""Inputs of forward function
+        Args:
+            x: the sequence fed to the positional encoder model (required).
+        Shape:
+            x: [sequence length, batch size, embed dim]
+            output: [sequence length, batch size, embed dim]
+        """
+        x = x + self.pe
+        return self.dropout(x)
+
 class CasRel(nn.Module):
     def __init__(self, config):
         super(CasRel, self).__init__()
@@ -182,6 +222,9 @@ class CasRel(nn.Module):
 
     def get_encoded_text(self, token_ids, mask):
         encoded_text = self.bert(token_ids, attention_mask=mask)[0]
+        # 添加模块
+        block = tAPE(d_model=512, max_len=300)
+        encoded_text = block(encoded_text)
         return encoded_text
 
     def get_subs(self, encoded_text):
@@ -200,8 +243,8 @@ class CasRel(nn.Module):
 
         # 归一化放这 ****** new ******
         # 这里增加norm模块
-        # block = CrossNorm()
-        # encoded_text = block(encoded_text)
+        block = CrossNorm()
+        encoded_text = block(encoded_text)
 
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
         # sigmoid: 将值映射到 (0, 1)
