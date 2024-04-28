@@ -4,6 +4,7 @@ from transformers import BertModel
 import torch.nn.functional as F
 import functools
 import numpy as np
+import math
 
 
 def calc_ins_mean_std(x, eps=1e-5):
