@@ -224,7 +224,7 @@ class CasRel(nn.Module):
     def get_encoded_text(self, token_ids, mask):
         encoded_text = self.bert(token_ids, attention_mask=mask)[0]
         # 添加模块
-        block = tAPE(d_model=768, max_len=300)
+        block = tAPE(d_model=768)
         encoded_text = block(encoded_text)
         return encoded_text
 
