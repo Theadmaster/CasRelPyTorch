@@ -225,7 +225,7 @@ class CasRel(nn.Module):
         encoded_text = self.bert(token_ids, attention_mask=mask)[0]
         # 添加模块
         block = tAPE(d_model=512, max_len=300)
-        encoded_text = block(encoded_text)
+        encoded_text = block(encoded_text.permute(1, 0, 2)).permute(1, 0, 2)
         return encoded_text
 
     def get_subs(self, encoded_text):
