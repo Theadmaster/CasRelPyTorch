@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch
 from transformers import BertModel
 from model.block.norm import CrossNorm
-from model.block.att import SelfAttention
+from model.block.att import SelfAttention, MHAttention, MultiHeadSelfAttention
 from model.block.tApe import tAPE
 
 class CasRel(nn.Module):
@@ -25,7 +25,7 @@ class CasRel(nn.Module):
                               hidden_size=self.config.bert_dim,
                               num_layers=1,
                               batch_first=True)
-        self.attention = nn.MultiheadAttention(self.config.bert_dim * 2, 12)
+        self.attention = MHAttention(self.config.bert_dim * 2, 12)
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
@@ -74,7 +74,7 @@ class CasRel(nn.Module):
         encoded_text = self.BiLSTM(encoded_text)[0]
 
         # self attention
-        encoded_text = self.attention(encoded_text)
+        encoded_text = self.attention(encoded_text, encoded_text, encoded_text, None)
         return encoded_text
 
 
