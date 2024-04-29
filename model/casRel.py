@@ -25,7 +25,7 @@ class CasRel(nn.Module):
                               hidden_size=self.config.bert_dim,
                               num_layers=1,
                               batch_first=True)
-        self.attention = SelfAttention(self.config.bert_dim * 2)
+        self.attention = nn.MultiheadAttention(self.config.bert_dim * 2, 12)
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
