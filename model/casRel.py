@@ -22,7 +22,8 @@ class CasRel(nn.Module):
         self.lstm = nn.LSTM(input_size=self.config.bert_dim,
                             hidden_size=self.config.bert_dim,
                             num_layers=1,
-                            batch_first=True)
+                            batch_first=True,
+                            bidirectional=True)
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
@@ -37,7 +38,7 @@ class CasRel(nn.Module):
         # encoded_text = block(encoded_text)
 
         # lstm
-        encoded_text = self.lstm(encoded_text)
+        encoded_text = self.lstm(encoded_text)[0]
 
         return encoded_text
 
