@@ -14,13 +14,17 @@ class CasRel(nn.Module):
         self.bert = BertModel.from_pretrained(self.config.bert_name)
         self.sub_heads_linear = nn.Linear(self.config.bert_dim * 2, 1)
         self.sub_tails_linear = nn.Linear(self.config.bert_dim * 2, 1)
-        self.obj_heads_linear = nn.Linear(self.config.bert_dim * 2, self.config.num_relations)
-        self.obj_tails_linear = nn.Linear(self.config.bert_dim * 2, self.config.num_relations)
-        self.lstm = nn.LSTM(input_size=self.config.bert_dim,
+        self.obj_heads_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
+        self.obj_tails_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
+        self.BiLSTM = nn.LSTM(input_size=self.config.bert_dim,
                             hidden_size=self.config.bert_dim,
                             num_layers=1,
                             batch_first=True,
                             bidirectional=True)
+        self.LSTM = nn.LSTM(input_size=self.config.bert_dim,
+                              hidden_size=self.config.bert_dim,
+                              num_layers=1,
+                              batch_first=True)
         self.attention = SelfAttention(self.config.bert_dim * 2)
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
@@ -31,25 +35,19 @@ class CasRel(nn.Module):
 
     def get_encoded_text(self, token_ids, mask):
         encoded_text = self.bert(token_ids, attention_mask=mask)[0]
-        # 添加模块
-        # block = tAPE(d_model=768)
-        # encoded_text = block(encoded_text)
-
-        # BiLSTM
-        encoded_text = self.lstm(encoded_text)[0]
-
-        # self attention
-        encoded_text = self.attention(encoded_text)
-
         return encoded_text
 
     def get_subs(self, encoded_text):
+        encoded_text = self.add_block_Bilstm_selfatt(encoded_text)
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, 1)
         pred_sub_heads = torch.sigmoid(self.sub_heads_linear(encoded_text))
         pred_sub_tails = torch.sigmoid(self.sub_tails_linear(encoded_text))
         return pred_sub_heads, pred_sub_tails
 
     def get_objs_for_specific_sub(self, sub_head_mapping, sub_tail_mapping, encoded_text):
+        # lstm
+        encoded_text = self.LSTM(encoded_text)[0]
+
         # sub_head_mapping [batch, 1, seq] * encoded_text [batch, seq, dim]
         sub_head = torch.matmul(sub_head_mapping, encoded_text)
         sub_tail = torch.matmul(sub_tail_mapping, encoded_text)
@@ -67,6 +65,18 @@ class CasRel(nn.Module):
         pred_obj_heads = torch.sigmoid(self.obj_heads_linear(encoded_text))
         pred_obj_tails = torch.sigmoid(self.obj_tails_linear(encoded_text))
         return pred_obj_heads, pred_obj_tails
+
+    def add_block_Bilstm_selfatt(self, encoded_text):
+        # 添加模块
+        # block = tAPE(d_model=768)
+        # encoded_text = block(encoded_text)
+        # BiLSTM
+        encoded_text = self.BiLSTM(encoded_text)[0]
+
+        # self attention
+        encoded_text = self.attention(encoded_text)
+        return encoded_text
+
 
     def forward(self, token_ids, token_ids_negative, token_ids_positive, mask, mask_negative, mask_positive, sub_head, sub_tail):
         encoded_text_positive = self.get_encoded_text(token_ids_positive, mask_positive)
