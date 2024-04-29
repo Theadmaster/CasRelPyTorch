@@ -3,11 +3,8 @@ sys.path.append('../')
 import torch.nn as nn
 import torch
 from transformers import BertModel
-import torch.nn.functional as F
-import functools
-import numpy as np
-import math
 from model.block.norm import CrossNorm
+from model.block.att import SelfAttention
 from model.block.tApe import tAPE
 
 class CasRel(nn.Module):
@@ -24,6 +21,7 @@ class CasRel(nn.Module):
                             num_layers=1,
                             batch_first=True,
                             bidirectional=True)
+        self.attention = SelfAttention(self.config.bert_dim * 2)
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
@@ -38,7 +36,10 @@ class CasRel(nn.Module):
         # encoded_text = block(encoded_text)
 
         # BiLSTM
-        # encoded_text = self.lstm(encoded_text)[0]
+        encoded_text = self.lstm(encoded_text)[0]
+
+        # self attention
+        encoded_text = self.attention(encoded_text)
 
         return encoded_text
 
