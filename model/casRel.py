@@ -12,8 +12,8 @@ class CasRel(nn.Module):
         super(CasRel, self).__init__()
         self.config = config
         self.bert = BertModel.from_pretrained(self.config.bert_name)
-        self.sub_heads_linear = nn.Linear(self.config.bert_dim * 2, 1)
-        self.sub_tails_linear = nn.Linear(self.config.bert_dim * 2, 1)
+        self.sub_heads_linear = nn.Linear(self.config.bert_dim, 1)
+        self.sub_tails_linear = nn.Linear(self.config.bert_dim, 1)
         self.obj_heads_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
         self.obj_tails_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
         self.BiLSTM = nn.LSTM(input_size=self.config.bert_dim,
@@ -38,7 +38,7 @@ class CasRel(nn.Module):
         return encoded_text
 
     def get_subs(self, encoded_text):
-        encoded_text = self.add_block_Bilstm_selfatt(encoded_text)
+        # encoded_text = self.add_block_Bilstm_selfatt(encoded_text)
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, 1)
         pred_sub_heads = torch.sigmoid(self.sub_heads_linear(encoded_text))
         pred_sub_tails = torch.sigmoid(self.sub_tails_linear(encoded_text))
@@ -46,7 +46,7 @@ class CasRel(nn.Module):
 
     def get_objs_for_specific_sub(self, sub_head_mapping, sub_tail_mapping, encoded_text):
         # lstm
-        encoded_text = self.LSTM(encoded_text)[0]
+        # encoded_text = self.LSTM(encoded_text)[0]
 
         # sub_head_mapping [batch, 1, seq] * encoded_text [batch, seq, dim]
         sub_head = torch.matmul(sub_head_mapping, encoded_text)
@@ -57,8 +57,8 @@ class CasRel(nn.Module):
 
         # 归一化放这 ****** new ******
         # 这里增加norm模块
-        block = CrossNorm()
-        encoded_text = block(encoded_text)
+        # block = CrossNorm()
+        # encoded_text = block(encoded_text)
 
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
         # sigmoid: 将值映射到 (0, 1)
