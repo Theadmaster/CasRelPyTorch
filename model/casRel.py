@@ -38,7 +38,7 @@ class CasRel(nn.Module):
         # encoded_text = block(encoded_text)
 
         # BiLSTM
-        encoded_text = self.lstm(encoded_text)[0]
+        # encoded_text = self.lstm(encoded_text)[0]
 
         return encoded_text
 
