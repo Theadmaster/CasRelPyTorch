@@ -15,10 +15,10 @@ class CasRel(nn.Module):
         super(CasRel, self).__init__()
         self.config = config
         self.bert = BertModel.from_pretrained(self.config.bert_name)
-        self.sub_heads_linear = nn.Linear(self.config.bert_dim, 1)
-        self.sub_tails_linear = nn.Linear(self.config.bert_dim, 1)
-        self.obj_heads_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
-        self.obj_tails_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
+        self.sub_heads_linear = nn.Linear(self.config.bert_dim * 2, 1)
+        self.sub_tails_linear = nn.Linear(self.config.bert_dim * 2, 1)
+        self.obj_heads_linear = nn.Linear(self.config.bert_dim * 2, self.config.num_relations)
+        self.obj_tails_linear = nn.Linear(self.config.bert_dim * 2, self.config.num_relations)
         self.lstm = nn.LSTM(input_size=self.config.bert_dim,
                             hidden_size=self.config.bert_dim,
                             num_layers=1,
@@ -37,7 +37,7 @@ class CasRel(nn.Module):
         # block = tAPE(d_model=768)
         # encoded_text = block(encoded_text)
 
-        # lstm
+        # BiLSTM
         encoded_text = self.lstm(encoded_text)[0]
 
         return encoded_text
