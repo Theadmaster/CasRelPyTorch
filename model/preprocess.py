@@ -2,26 +2,29 @@ import json
 import random
 import os
 
+# 打开要生成的数据
+def open_data(url):
 
-# 构建数据文件路径
-data_folder = os.path.join('..', 'data', 'coronary_angiography')
-jsonl_file = os.path.join(data_folder, 'raw_segment_set.jsonl')
+    # 读取 JSONL 文件
+    data = []
 
-# 读取 JSONL 文件
-data = []
+    with open(url, 'r', encoding='utf-8') as file:
+        for line in file:
+            item = json.loads(line.strip())
+            data.append(item)
 
-with open(jsonl_file, 'r', encoding='utf-8') as file:
-    for line in file:
-        item = json.loads(line.strip())
-        data.append(item)
+    # 洗牌数据
+    random.shuffle(data)
+    len_sum = len(data)
+    train_len = int(0.7 * len_sum)
+    dev_len = int(0.15 * len_sum)
 
-# 洗牌数据
-random.shuffle(data)
+    return data[:train_len], data[train_len:train_len+dev_len], data[train_len+dev_len:]
 
 # 选择需要的数量的数据
-train_data = data[:1200]
-dev_data = data[1200:1460]
-test_data = data[1460:1729]
+# train_data = data[:1200]
+# dev_data = data[1200:1460]
+# test_data = data[1460:1729]
 
 # train_data = data[:3200]
 # dev_data = data[3200:3900]
@@ -32,7 +35,7 @@ test_data = data[1460:1729]
 # test_data = data[360:402]
 
 # 处理数据并存入文件
-def save_data(filename, data, data_folder=data_folder):
+def save_data(filename, data, data_folder):
     with open(os.path.join(data_folder, filename), 'w', encoding='utf-8') as file:
         for item in data:
             processed_item = preprocess_data_item(item)
@@ -158,6 +161,9 @@ def save_len_less_than_751_raw():
 
 if __name__ == '__main__':
     # save_len_less_than_751_raw()
-    save_data('train.json', train_data)
-    save_data('dev.json', dev_data)
-    save_data('test.json', test_data)
+    data_folder = os.path.join('..', 'data', 'coronary_angiography', 'rel_more_than_3')
+    jsonl_file = os.path.join(data_folder, 'rel_more_3_raw.jsonl')
+    train_data, dev_data, test_data = open_data(jsonl_file)
+    save_data('train.json', train_data, data_folder)
+    save_data('dev.json', dev_data, data_folder)
+    save_data('test.json', test_data, data_folder)
