@@ -161,8 +161,8 @@ def save_len_less_than_751_raw():
 
 if __name__ == '__main__':
     # save_len_less_than_751_raw()
-    data_folder = os.path.join('..', 'data', 'coronary_angiography', 'rel_more_than_3')
-    jsonl_file = os.path.join(data_folder, 'rel_more_3_raw.jsonl')
+    data_folder = os.path.join('..', 'data', 'coronary_angiography', 'rel_1')
+    jsonl_file = os.path.join(data_folder, 'rel_1_raw.jsonl')
     train_data, dev_data, test_data = open_data(jsonl_file)
     save_data('train.json', train_data, data_folder)
     save_data('dev.json', dev_data, data_folder)
