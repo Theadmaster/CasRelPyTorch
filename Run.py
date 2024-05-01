@@ -8,6 +8,7 @@ from model.callback import MyCallBack
 from model.data import load_data, get_data_iterator
 from model.config import Config
 from model.evaluate import metric
+from model.block.loss import InfoNCE
 import torch.nn.functional as F
 from fastNLP import Trainer, LossBase
 
@@ -49,12 +50,21 @@ def init_entities_dict():
     return entity_dict
 entity_dict = init_entities_dict()
 
+
+
+
 class MyLoss(LossBase):
     def __init__(self):
         super(MyLoss, self).__init__()
+        self.infoNCE = InfoNCE(negative_mode='paired')
 
     def get_loss(self, predict, target):
         mask = target['mask']
+
+        def info_nce_loss(anchor, positive, negative, temperature=0.1):
+            negative_keys = negative.unsqueeze(1)
+            output = self.infoNCE(anchor, positive, negative_keys)
+            return output
 
         def contrastive_loss(anchor, positive, negative, margin=con.margin):
             pos_similarity = F.cosine_similarity(anchor, positive)
@@ -74,7 +84,7 @@ class MyLoss(LossBase):
                   loss_fn(predict['sub_tails'], target['sub_tails'], mask) + \
                   loss_fn(predict['obj_heads'], target['obj_heads'], mask) + \
                   loss_fn(predict['obj_tails'], target['obj_tails'], mask)
-        span_loss = contrastive_loss(predict['anchor'], predict['positive'], predict['negative'])
+        span_loss = info_nce_loss(predict['anchor'], predict['positive'], predict['negative'])
 
         if con.cl:
             return re_loss * con.re_weight + span_loss * con.span_weight
