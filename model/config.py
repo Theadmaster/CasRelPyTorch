@@ -29,7 +29,8 @@ class Config(object):
         self.result_save_name = 'result.json'
 
         # 对比学习超参数
-        self.margin = args.margin
+        self.temperature = args.temperature # infoNCE contrastive loss
+        self.margin = args.margin  # margin contrastive loss
         self.re_weight = args.re_weight
         self.span_weight = args.span_weight
 

@@ -34,6 +34,7 @@ parser.add_argument('--dataset', default='coronary_angiography', type=str, help=
 parser.add_argument("--bert_name", default='bert-base-chinese', type=str, help='choose pretrained bert name')
 parser.add_argument('--bert_dim', default=768, type=int)
 parser.add_argument('--margin', default=0.4, type=float)
+parser.add_argument('--temperature', default=0.1, type=float)
 parser.add_argument('--re_weight', default=1, type=float)
 parser.add_argument('--span_weight', default=1, type=float)
 parser.add_argument('--cl', default=True, type=bool)
@@ -56,12 +57,12 @@ entity_dict = init_entities_dict()
 class MyLoss(LossBase):
     def __init__(self):
         super(MyLoss, self).__init__()
-        self.infoNCE = InfoNCE(negative_mode='paired')
+        self.infoNCE = InfoNCE(negative_mode='paired', temperature=con.temperature)
 
     def get_loss(self, predict, target):
         mask = target['mask']
 
-        def info_nce_loss(anchor, positive, negative, temperature=0.1):
+        def info_nce_loss(anchor, positive, negative):
             negative_keys = negative.unsqueeze(1)
             output = self.infoNCE(anchor, positive, negative_keys)
             return output
