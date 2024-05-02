@@ -61,9 +61,7 @@ class CasRel(nn.Module):
 
         # 归一化放这 ****** new ******
         # 这里增加norm模块
-        encoded_text = encoded_text.unsqueeze(1)
-        encoded_text = self.cnsn(encoded_text)
-        encoded_text = encoded_text.squeeze(1)
+        encoded_text = self.crossnorm(encoded_text)
 
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
         # sigmoid: 将值映射到 (0, 1)
