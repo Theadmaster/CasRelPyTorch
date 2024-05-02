@@ -103,5 +103,5 @@ def metric(data_iter, rel_vocab, config, model, output=True, h_bar=0.5, t_bar=0.
     precision = correct_num / (predict_num + 1e-10)
     recall = correct_num / (gold_num + 1e-10)
     f1_score = 2 * precision * recall / (precision + recall + 1e-10)
-    print('f1: {:4.2f}, precision: {:4.2f}, recall: {:4.2f}'.format(f1_score, precision, recall))
+    print('f1: {:6.4f}, precision: {:6.4f}, recall: {:6.4f}'.format(f1_score, precision, recall))
     return precision, recall, f1_score
