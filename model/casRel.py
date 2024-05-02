@@ -27,7 +27,7 @@ class CasRel(nn.Module):
                               batch_first=True)
         self.GRU = nn.GRU(input_size=self.config.bert_dim,
                           hidden_size=self.config.bert_dim,
-                          num_layers=4,
+                          num_layers=1,
                           batch_first=True,
                           dropout=0.0)
         self.norm = nn.LayerNorm(self.config.bert_dim)
