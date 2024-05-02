@@ -25,6 +25,12 @@ class CasRel(nn.Module):
                               hidden_size=self.config.bert_dim,
                               num_layers=1,
                               batch_first=True)
+        self.GRU = nn.GRU(input_size=self.config.bert_dim,
+                          hidden_size=self.config.bert_dim,
+                          num_layers=1,
+                          batch_first=True,
+                          dropout=0.0)
+        self.norm = nn.LayerNorm(self.config.bert_dim)
         self.attention = MHAttention(self.config.bert_dim * 2, 8)
         self.crossnorm = CrossNorm()
         self.selfnorm = SelfNorm(chan_num=1)
@@ -50,7 +56,10 @@ class CasRel(nn.Module):
 
     def get_objs_for_specific_sub(self, sub_head_mapping, sub_tail_mapping, encoded_text):
         # lstm
-        encoded_text = self.LSTM(encoded_text)[0]
+        # encoded_text = self.LSTM(encoded_text)[0]
+        # gru
+        h0 = torch.zeros(self.GRU.num_layers, encoded_text.size(0), self.GRU.hidden_size)
+        encoded_text = self.GRU(encoded_text, h0)[0]
 
         # sub_head_mapping [batch, 1, seq] * encoded_text [batch, seq, dim]
         sub_head = torch.matmul(sub_head_mapping, encoded_text)
@@ -61,7 +70,7 @@ class CasRel(nn.Module):
 
         # 归一化放这 ****** new ******
         # 这里增加norm模块
-        encoded_text = self.crossnorm(encoded_text)
+        encoded_text = self.norm(encoded_text)
 
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
         # sigmoid: 将值映射到 (0, 1)

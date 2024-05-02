@@ -28,7 +28,7 @@ class MyCallBack(Callback):
 
     def on_epoch_end(self):
         precision, recall, f1_score = metric(self.data_iter, self.rel_vocab, self.config, self.model)
-        self.logging('epoch {:3d}, f1: {:4.2f}, precision: {:4.2f}, recall: {:4.2f}'
+        self.logging('epoch {:3d}, f1: {:6.4f}, precision: {:6.4f}, recall: {:6.4f}'
                      .format(self.epoch, f1_score, precision, recall))
 
         if f1_score > self.best_f1_score:
@@ -36,13 +36,13 @@ class MyCallBack(Callback):
             self.best_epoch = self.epoch
             self.best_precision = precision
             self.best_recall = recall
-            self.logging("Saving the model, epoch: {:3d}, best f1: {:4.2f}, precision: {:4.2f}, recall: {:4.2f}".
+            self.logging("Saving the model, epoch: {:3d}, best f1: {:6.4f}, precision: {:6.4f}, recall: {:6.4f}".
                          format(self.best_epoch, self.best_f1_score, precision, recall))
             path = os.path.join(self.config.save_weights_dir, self.config.weights_save_name)
             torch.save(self.model.state_dict(), path)
 
     def on_train_end(self):
         self.logging("-" * 5 + "Finish training" + "-" * 5)
-        self.logging("best epoch: {:3d}, best f1: {:4.2f}, precision: {:4.2f}, recall: {:4.2}".
+        self.logging("best epoch: {:3d}, best f1: {:6.4f}, precision: {:6.4f}, recall: {:6.4}".
                      format(self.best_epoch, self.best_f1_score, self.best_precision, self.best_recall))
 
