@@ -18,7 +18,7 @@ class CasRel(nn.Module):
         self.obj_tails_linear = nn.Linear(self.config.bert_dim, self.config.num_relations)
         self.BiLSTM = nn.LSTM(input_size=self.config.bert_dim,
                             hidden_size=self.config.bert_dim,
-                            num_layers=4,
+                            num_layers=1,
                             batch_first=True,
                             bidirectional=True)
         self.LSTM = nn.LSTM(input_size=self.config.bert_dim,
