@@ -58,7 +58,7 @@ class CasRel(nn.Module):
         # lstm
         # encoded_text = self.LSTM(encoded_text)[0]
         # gru
-        h0 = torch.zeros(self.GRU.num_layers, encoded_text.size(0), self.GRU.hidden_size)
+        h0 = torch.zeros(self.GRU.num_layers, encoded_text.size(0), self.GRU.hidden_size).to(encoded_text.device)
         encoded_text = self.GRU(encoded_text, h0)[0]
 
         # sub_head_mapping [batch, 1, seq] * encoded_text [batch, seq, dim]
