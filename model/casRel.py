@@ -3,7 +3,7 @@ sys.path.append('../')
 import torch.nn as nn
 import torch
 from transformers import BertModel
-from model.block.norm import CrossNorm
+from model.block.norm import CrossNorm, SelfNorm, CNSN
 from model.block.att import SelfAttention, MHAttention, MultiHeadSelfAttention
 from model.block.tApe import tAPE
 
@@ -26,6 +26,10 @@ class CasRel(nn.Module):
                               num_layers=1,
                               batch_first=True)
         self.attention = MHAttention(self.config.bert_dim * 2, 8)
+        self.crossnorm = CrossNorm()
+        self.selfnorm = SelfNorm(chan_num=1)
+        self.cnsn = CNSN(self.crossnorm, self.selfnorm)
+
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
@@ -57,8 +61,9 @@ class CasRel(nn.Module):
 
         # 归一化放这 ****** new ******
         # 这里增加norm模块
-        block = CrossNorm()
-        encoded_text = block(encoded_text)
+        encoded_text = encoded_text.unsqueeze(1)
+        encoded_text = self.cnsn(encoded_text)
+        encoded_text = encoded_text.squeeze(1)
 
         # shape: (batch_size:8, seq, bert_dim:768) => (8, seq, num_relations)
         # sigmoid: 将值映射到 (0, 1)

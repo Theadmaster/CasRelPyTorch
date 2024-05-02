@@ -176,11 +176,11 @@ if __name__ == '__main__':
 
     # 创建 CrossNorm 和 SelfNorm 的实例
     crossnorm = CrossNorm()
-    selfnorm = SelfNorm(chan_num=3)
+    selfnorm = SelfNorm(chan_num=1)
     block = CNSN(crossnorm, selfnorm)
 
 
-    input = torch.rand(32, 3, 224, 224)
+    input = torch.rand(32, 1, 224, 224)
     output = block(input)
     print(input.size())
     print(output.size())
