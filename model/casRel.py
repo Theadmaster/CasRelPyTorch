@@ -3,7 +3,6 @@ sys.path.append('../')
 import torch.nn as nn
 import torch
 from transformers import BertModel
-from model.block.norm import CrossNorm, SelfNorm, CNSN
 from model.block.att import SelfAttention, MHAttention, MultiHeadSelfAttention
 from model.block.tApe import tAPE
 
@@ -30,17 +29,22 @@ class CasRel(nn.Module):
                           num_layers=1,
                           batch_first=True,
                           dropout=0.0)
+        self.projection_head = nn.Sequential(
+            nn.Linear(self.config.bert_dim, self.config.bert_dim),
+            nn.ReLU(),
+            nn.Linear(self.config.bert_dim, 256)
+        )
         self.norm = nn.LayerNorm(self.config.bert_dim)
         self.attention = MHAttention(self.config.bert_dim * 2, 8)
-        self.crossnorm = CrossNorm()
-        self.selfnorm = SelfNorm(chan_num=1)
-        self.cnsn = CNSN(self.crossnorm, self.selfnorm)
 
 
     def projecter_cls(self, encoded_text_origin, encoded_text_augmented_positive, encoded_text_augmented_negative):
         cls_origin = encoded_text_origin[:, 0, :]
         cls_augmented_positive = encoded_text_augmented_positive[:, 0, :]
         cls_augmented_negative = encoded_text_augmented_negative[:, 0, :]
+        cls_origin = self.projection_head(cls_origin)
+        cls_augmented_positive = self.projection_head(cls_augmented_positive)
+        cls_augmented_negative = self.projection_head(cls_augmented_negative)
         return cls_origin, cls_augmented_positive, cls_augmented_negative
 
     def get_encoded_text(self, token_ids, mask):
