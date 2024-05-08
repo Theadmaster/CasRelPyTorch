@@ -11,8 +11,8 @@ from collections import defaultdict
 from torch.nn.utils.rnn import pad_sequence
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# num_rel = 18
-num_rel = 8
+num_rel = 18
+# num_rel = 8
 
 
 

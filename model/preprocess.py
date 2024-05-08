@@ -159,11 +159,140 @@ def save_len_less_than_751_raw():
         for data in filtered_data:
             out_f.write(json.dumps(data, ensure_ascii=False) + '\n')
 
+
+def count_max_len():
+    data_folder = os.path.join('..', 'data', 'coronary_angiography')
+    jsonl_file = os.path.join(data_folder, 'raw_segment.jsonl')
+    max = 0
+    total = 0
+    count = 0
+    rel_BpSy_count = 0
+    rel_BpIn_count = 0
+    rel_BpTm_count = 0
+    rel_TmDo_count = 0
+    rel_TmMc_count = 0
+    rel_InSy_count = 0
+    rel_InMc_count = 0
+    rel_McBp_count = 0
+
+    Bp = 0
+    Sy = 0
+    In = 0
+    Tm = 0
+    Do = 0
+    Mc = 0
+
+    with open(jsonl_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            data = json.loads(line.strip())
+            text = data['text']
+            rels = data['relations']
+            entities = data['entities']
+            for rel in rels:
+                if rel['type'] == '身体部位_症状体征':
+                    rel_BpSy_count += 1
+                if rel['type'] == '身体部位_检查检验':
+                    rel_BpIn_count += 1
+                if rel['type'] == '身体部位_治疗方式':
+                    rel_BpTm_count += 1
+                if rel['type'] == '治疗方式_用药剂量':
+                    rel_TmDo_count += 1
+                if rel['type'] == '治疗方式_医疗耗材':
+                    rel_TmMc_count += 1
+                if rel['type'] == '检查检验_症状体征':
+                    rel_InSy_count += 1
+                if rel['type'] == '检查检验_医疗耗材':
+                    rel_InMc_count += 1
+                if rel['type'] == '医疗耗材_身体部位':
+                    rel_McBp_count += 1
+            for entity in entities:
+                if entity['label'] == '身体部位':
+                    Bp += 1
+                if entity['label'] == '症状体征':
+                    Sy += 1
+                if entity['label'] == '治疗方式':
+                    Tm += 1
+                if entity['label'] == '用药剂量':
+                    Do += 1
+                if entity['label'] == '医疗耗材':
+                    Mc += 1
+                if entity['label'] == '检查检验':
+                    In += 1
+
+            total += len(text)
+            count += 1
+            # 如果text长度小于751，则将该条数据添加到列表中
+            if len(text) > max:
+                max = len(text)
+    print(f'最长的序列长度为：{max}')
+    print(f'平均的序列长度为：{total / count}')
+    print(f'身体部位_症状体征：{rel_BpSy_count}')
+    print(f'身体部位_检查检验：{rel_BpIn_count}')
+    print(f'身体部位_治疗方式：{rel_BpTm_count}')
+    print(f'治疗方式_用药剂量：{rel_TmDo_count}')
+    print(f'治疗方式_医疗耗材：{rel_TmMc_count}')
+    print(f'检查检验_症状体征：{rel_InSy_count}')
+    print(f'检查检验_医疗耗材：{rel_InMc_count}')
+    print(f'医疗耗材_身体部位：{rel_McBp_count}')
+    print(f'身体部位：{Bp}')
+    print(f'症状体征：{Sy}')
+    print(f'检查检验：{In}')
+    print(f'治疗方式：{Tm}')
+    print(f'用药剂量：{Do}')
+    print(f'医疗耗材：{Mc}')
+
+
+def convert_ca():
+    data_folder = os.path.join('..', 'data', 'coronary_angiography')
+    jsonl_file = os.path.join(data_folder, 'raw_segment.jsonl')
+    res = []
+    with open(jsonl_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            data = json.loads(line.strip())
+            text = data['text']
+            rels = data['relations']
+            entities = data['entities']
+            new_entities = []
+            new_rels = []
+            for entity in entities:
+                e_item = {'type': entity['label'], 'start': entity['start_offset'], 'end': entity['end_offset'], 'id': entity['id']}
+                new_entities.append(e_item)
+            for rel in rels:
+                head = 0
+                tail = 0
+                for idx, val in enumerate(new_entities):
+                    if val['id'] == rel['from_id']:
+                        head = idx
+                    if val['id'] == rel['to_id']:
+                        tail = idx
+                    r_item = {'type': rel['type'], 'head': head, 'tail': tail}
+                new_rels.append(r_item)
+
+            res.append({'tokens': list(text), 'entities': new_entities, 'relations': new_rels})
+    output_file_train = os.path.join(data_folder, 'ca_train.json')
+    output_file_eval = os.path.join(data_folder, 'ca_eval.json')
+    output_file_test = os.path.join(data_folder, 'ca_test.json')
+    random.shuffle(res)
+    train_len = int(0.7 * len(res))
+    eval_len = int(0.15 * len(res))
+    test_len = 0.1 * len(res)
+    with open(output_file_train, 'w', encoding='utf-8') as out_f:
+        json.dump(res[:train_len], out_f, ensure_ascii=False)
+    with open(output_file_eval, 'w', encoding='utf-8') as out_f:
+        json.dump(res[train_len:eval_len+train_len], out_f, ensure_ascii=False)
+    with open(output_file_test, 'w', encoding='utf-8') as out_f:
+        json.dump(res[eval_len+train_len:], out_f, ensure_ascii=False)
+
 if __name__ == '__main__':
     # save_len_less_than_751_raw()
-    data_folder = os.path.join('..', 'data', 'coronary_angiography', 'rel_1')
-    jsonl_file = os.path.join(data_folder, 'rel_1_raw.jsonl')
-    train_data, dev_data, test_data = open_data(jsonl_file)
-    save_data('train.json', train_data, data_folder)
-    save_data('dev.json', dev_data, data_folder)
-    save_data('test.json', test_data, data_folder)
+    # data_folder = os.path.join('..', 'data', 'coronary_angiography', 'rel_1')
+    # jsonl_file = os.path.join(data_folder, 'rel_1_raw.jsonl')
+    # train_data, dev_data, test_data = open_data(jsonl_file)
+    # save_data('train.json', train_data, data_folder)
+    # save_data('dev.json', dev_data, data_folder)
+    # save_data('test.json', test_data, data_folder)
+
+    # count_max_len()
+
+    convert_ca()
+

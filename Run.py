@@ -3,7 +3,7 @@ import os
 import json
 import torch
 import torch.optim as optim
-from model.casRel import CasRel
+from model.CLCBAG import CLCBAG
 from model.callback import MyCallBack
 from model.data import load_data, get_data_iterator
 from model.config import Config
@@ -98,7 +98,7 @@ class MyLoss(LossBase):
 
 
 if __name__ == '__main__':
-    model = CasRel(con).to(device)
+    model = CLCBAG(con).to(device)
     data_bundle, rel_vocab = load_data(con.train_path, con.dev_path, con.test_path, con.rel_path)
     train_data = get_data_iterator(con, data_bundle.get_dataset('train'), rel_vocab, entity_dict=entity_dict)
     dev_data = get_data_iterator(con, data_bundle.get_dataset('dev'), rel_vocab, is_test=True)

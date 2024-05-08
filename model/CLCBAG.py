@@ -6,9 +6,9 @@ from transformers import BertModel
 from model.block.att import SelfAttention, MHAttention, MultiHeadSelfAttention
 from model.block.tApe import tAPE
 
-class CasRel(nn.Module):
+class CLCBAG(nn.Module):
     def __init__(self, config):
-        super(CasRel, self).__init__()
+        super(CLCBAG, self).__init__()
         self.config = config
         self.bert = BertModel.from_pretrained(self.config.bert_name)
         self.sub_heads_linear = nn.Linear(self.config.bert_dim * 2, 1)
@@ -32,7 +32,7 @@ class CasRel(nn.Module):
         self.projection_head = nn.Sequential(
             nn.Linear(self.config.bert_dim, self.config.bert_dim),
             nn.ReLU(),
-            nn.Linear(self.config.bert_dim, 256)
+            nn.Linear(self.config.bert_dim, 64)
         )
         self.norm = nn.LayerNorm(self.config.bert_dim)
         self.attention = MHAttention(self.config.bert_dim * 2, 8)
