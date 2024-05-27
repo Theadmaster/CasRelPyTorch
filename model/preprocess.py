@@ -2,6 +2,31 @@ import json
 import random
 import os
 
+def de_special_words(url):
+    data = []
+
+    with open(url, 'r', encoding='utf-8') as file:
+        for line in file:
+            item = json.loads(line.strip())
+            data.append(item)
+
+    for item in data:
+        spo_list = item['spo_list']
+        for spo in spo_list:
+            if spo['object'] == '重复造影':
+                spo['object'] = '造影'
+            if spo['subject'] == '重复造影':
+                spo['subject'] = '造影'
+            if '由远及近' in spo['object']:
+                spo['object'] = spo['object'][4:]
+            if '由远及近' in spo['subject']:
+                spo['subject'] = spo['subject'][4:]
+
+    with open(url, 'w', encoding='utf-8') as file:
+        for item in data:
+            json.dump(item, file, ensure_ascii=False)
+            file.write('\n')
+
 # 打开要生成的数据
 def open_data(url):
 
@@ -294,5 +319,7 @@ if __name__ == '__main__':
 
     # count_max_len()
 
-    convert_ca()
+    # convert_ca()
 
+    url = os.path.join('..', 'data', 'coronary_angiography', 'train.json')
+    de_special_words(url)
